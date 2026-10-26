@@ -10,3 +10,59 @@
 @media(max-height:760px) and (min-width:761px){.join-panel{top:51%;transform:translateY(-44%);padding:20px 23px 16px}.join-panel h2{font-size:25px}.panel-kicker{padding-bottom:12px;margin-bottom:17px}.join-panel>.muted{margin-bottom:15px}.role-label{margin-top:13px}.room-row{margin:13px 0 15px}.load-status{margin-top:10px}.lobby-nav{top:25px}.lobby-footer{bottom:20px;padding-top:15px}.hero-copy{top:32%}.mission-card{top:140px}.chat{bottom:280px}.minimap-wrap{width:180px}#minimap{height:155px}.bottom-controls{left:235px}.hud-top{top:20px}}
 @media(max-width:760px){body{overflow:auto}.lobby{overflow:auto;background:linear-gradient(0deg,#0d2028ee,#0d20287d);padding-bottom:100px;pointer-events:auto}.lobby-nav{top:20px;left:24px;right:24px}.brand{font-size:18px}.brand-rp{font-size:23px}.hero-copy{position:relative;top:auto;left:auto;margin:130px 24px 25px}.hero-copy h1{font-size:60px;margin:20px 0}.hero-copy .eyebrow{font-size:8px}.hero-copy p{font-size:14px}.hero-tags{margin-top:20px}.join-panel{position:relative;right:auto;top:auto;transform:none;width:auto;margin:30px 24px}.lobby-footer{position:relative;bottom:auto;left:auto;right:auto;margin:25px 24px;font-size:7px}.footer-right{display:none}.location{display:none}.hud-top{top:18px;left:16px;right:16px}.wallet b{font-size:24px}.mission-card{top:135px;right:15px;width:185px;padding:12px}.mission-card h3{font-size:15px}.mission-card p{font-size:10px}.mission-card button{font-size:9px}.mission-card .eyebrow{font-size:6px}.hud-tools{left:15px;top:100px}.hud-tools #mic-label{display:none}.minimap-wrap{width:155px;left:15px;bottom:45px}#minimap{height:135px}.bottom-controls{display:none}.chat{left:15px;bottom:240px;max-width:200px}.vehicle-status{right:15px;bottom:40px;width:150px}#speed-wrap>b{font-size:48px}.interaction{bottom:215px;font-size:10px;max-width:90vw;white-space:nowrap}.modal{padding:12px}.modal-card{padding:25px 20px}.modal h2{font-size:25px}.map-layout{grid-template-columns:1fr}.map-places>button{padding:9px 2px}.map-layout canvas{max-height:40vh;width:auto;max-width:100%;justify-self:center}.help-grid{grid-template-columns:1fr;gap:15px}.help-grid p{font-size:12px}#notifications{left:15px;max-width:210px;top:147px}.toast{font-size:10px;padding:9px 10px}.jail-banner{padding:25px;width:85vw}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Touch controls keep the middle of the screen free for aiming and looking. */
+.touch-controls{display:none;position:absolute;inset:0;pointer-events:none;direction:ltr;user-select:none;-webkit-user-select:none}
+.touch-mode.in-game .touch-controls{display:block}
+.modal-open .touch-controls,.chatting .touch-controls{visibility:hidden}
+.touch-stick{position:absolute;left:max(24px,env(safe-area-inset-left));bottom:max(28px,env(safe-area-inset-bottom));width:132px;height:132px;border:1px solid #e6f6ce66;border-radius:50%;background:radial-gradient(circle,#d9efbb12 38%,#12242c94 39%,#12242c94 68%,#d9efbb22 69%);pointer-events:auto;touch-action:none}
+.touch-stick>span{position:absolute;top:14px;left:0;right:0;text-align:center;font-size:10px;color:#dbe5d3}
+#stick-knob{position:absolute;left:43px;top:43px;width:46px;height:46px;border-radius:50%;background:#e0f5b7b5;border:2px solid #eaf9d1;box-shadow:0 3px 18px #0005;pointer-events:none}
+.touch-actions{position:absolute;bottom:max(28px,env(safe-area-inset-bottom));right:max(20px,env(safe-area-inset-right));width:170px;display:grid;grid-template-columns:1fr 1fr;gap:10px;direction:rtl}
+.touch-actions button,.touch-utility button{background:#122630d9;border:1px solid #e5f5d35e;min-height:52px;border-radius:16px;font-size:12px;touch-action:none;padding:8px;box-shadow:0 3px 18px #0003}
+.touch-actions [data-touch=interact]{color:var(--lime);border-color:#ddfca08a}
+.touch-actions .touch-fire{background:#834b3ecf;border-color:#f3b297;color:#fff1e6}
+.touch-actions button.selected,.touch-controls button.pressed{background:#ddfca0;color:#14251f;border-color:#ddfca0}
+.touch-actions .touch-brake{display:none;background:#6d4441d9}
+.driving .touch-brake{display:block}.driving [data-touch=aim],.driving [data-touch=reload],.driving [data-touch=shoot]{display:none}
+.driving [data-touch=interact]{grid-column:2}.driving .touch-brake{grid-column:1;grid-row:1}
+.touch-utility{position:absolute;bottom:calc(max(28px,env(safe-area-inset-bottom)) + 136px);right:max(20px,env(safe-area-inset-right));display:flex;gap:7px;direction:rtl}
+.touch-utility button{min-width:48px;min-height:44px;border-radius:10px;font-size:10px}
+.touch-utility [data-touch=talk]{color:#a6b4b0}.touch-utility [data-touch=talk].voice-ready{color:var(--lime)}
+.look-hint{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-size:9px;text-shadow:0 1px 5px #000;color:#d7e1d0;white-space:nowrap}
+.touch-mode.in-game{overflow:hidden;overscroll-behavior:none}
+.touch-mode .bottom-controls,.touch-mode .interaction kbd,.touch-mode .chat-open kbd{display:none}
+.touch-mode .hud-top{top:max(12px,env(safe-area-inset-top));left:max(16px,env(safe-area-inset-left));right:max(16px,env(safe-area-inset-right))}
+.touch-mode .hud-tools{top:75px;left:max(16px,env(safe-area-inset-left));right:auto;gap:6px}
+.touch-mode .hud-tools button{width:44px;height:44px}.touch-mode #mic-label{display:none}
+.touch-mode .mini-brand{font-size:20px}.touch-mode .mini-brand>span{font-size:7px;margin-top:7px;padding:4px 6px}
+.touch-mode .wallet b{font-size:24px;margin:3px 0}.touch-mode .wallet small{font-size:7px}.touch-mode #wanted{font-size:17px}
+.touch-mode .minimap-wrap{left:max(16px,env(safe-area-inset-left));top:130px;bottom:auto;width:120px;padding:3px}
+.touch-mode #minimap{height:92px}.touch-mode .map-bottom{padding:4px 2px;font-size:6px}.touch-mode .map-bottom button{min-height:22px}.touch-mode .health-row{padding:5px 6px}
+.touch-mode .mission-card{top:92px;right:max(16px,env(safe-area-inset-right));width:185px;padding:10px 12px}
+.touch-mode .mission-card h3{font-size:14px;margin:8px 0 3px}.touch-mode .mission-card p{font-size:10px;line-height:1.5}.touch-mode .mission-card button{margin-top:6px;min-height:32px;padding-top:6px}.touch-mode .mission-card .eyebrow{font-size:6px}
+.touch-mode .vehicle-status{right:max(20px,env(safe-area-inset-right));bottom:223px;width:150px}.touch-mode #speed-wrap>b{font-size:40px}.touch-mode #speed-wrap>span{font-size:12px;padding:5px}.touch-mode .rpm{margin-top:8px}.touch-mode #ammo-wrap>small{display:none}.touch-mode #ammo-wrap>b{font-size:24px}
+.touch-mode .interaction{bottom:220px;max-width:calc(100vw - 32px);padding:6px 10px;font-size:10px;white-space:normal;text-align:center;direction:rtl}
+.touch-mode .chat{left:max(16px,env(safe-area-inset-left));bottom:178px;max-width:215px;width:40vw;font-size:9px}.touch-mode .chat p{padding:3px 6px;margin:3px 0}.touch-mode .chat p:nth-last-child(n+3){display:none}.touch-mode .chat-open{min-height:40px;padding:5px 10px;border:1px solid #ffffff35;background:#122630c9;border-radius:8px;font-size:11px}
+.touch-mode #notifications{top:260px;left:max(16px,env(safe-area-inset-left));max-width:min(250px,60vw)}.touch-mode .toast{font-size:10px;padding:7px 10px}.touch-mode .toast:not(:last-child){display:none}
+.touch-mode .modal-card{max-height:92dvh}.touch-mode .modal input,.touch-mode .join-panel input:not([type=radio]),.touch-mode .chat input{font-size:16px}
+.touch-mode.chatting .chat{bottom:max(12px,env(safe-area-inset-bottom));left:16px;right:16px;width:auto;max-width:none;z-index:15}.touch-mode.chatting .chat p{display:block}
+.touch-mode .close-modal{width:44px;height:44px;left:12px;top:12px}.touch-mode .modal-eyebrow{padding-left:40px}.touch-mode .pause-actions>button{min-height:44px}
+.invite-url{width:100%;padding:12px;background:#0b1d24;color:#e7efdf;border:1px solid #ddfca080;font-size:14px}
+.touch-mode .disconnect-banner{top:20%;max-width:90%;font-size:11px;text-align:center;z-index:12}
+@media(max-width:599px) and (min-height:521px){.touch-mode .mission-card{top:130px}.touch-mode .chat{top:294px;bottom:auto;width:175px}.touch-mode #notifications{top:365px}.touch-mode.chatting .chat{top:auto;bottom:max(12px,env(safe-area-inset-bottom));width:auto}}
+@media(max-height:520px) and (min-width:600px){
+  .touch-mode .lobby{overflow:auto;pointer-events:auto;min-height:100%;height:100%;padding:78px 20px 30px;display:grid;grid-template-columns:1fr minmax(290px,360px);gap:24px;align-items:start}
+  .touch-mode .lobby-nav{top:16px;left:22px;right:22px}.touch-mode .hero-copy{position:relative;left:auto;top:auto;margin:30px 0 0}.touch-mode .hero-copy h1{font-size:54px}.touch-mode .hero-copy p{font-size:14px}.touch-mode .hero-copy .eyebrow{font-size:7px}
+  .touch-mode .join-panel{position:relative;right:auto;top:auto;transform:none;width:100%;margin:0;padding:20px}.touch-mode .lobby-footer{grid-column:1/-1;position:relative;left:auto;right:auto;bottom:auto;margin:0}
+  .touch-mode .location,.touch-mode .mission-card .eyebrow,.touch-mode .mission-card button,.touch-mode .mission-card p{display:none}.touch-mode .mission-card{top:75px;width:180px;padding:7px 10px}.touch-mode .mission-card h3{margin:0;font-size:12px}.touch-mode .mission-card .progress{margin-top:7px}
+  .touch-mode .hud-tools{top:65px}.touch-mode .minimap-wrap{top:115px;width:103px}.touch-mode #minimap{height:60px}.touch-mode .map-bottom{display:none}
+  .touch-mode .touch-stick{width:112px;height:112px;bottom:max(16px,env(safe-area-inset-bottom))} .touch-mode #stick-knob{left:33px;top:33px}
+  .touch-mode .touch-actions{bottom:max(16px,env(safe-area-inset-bottom));width:158px;gap:8px}.touch-mode .touch-actions button{min-height:46px;font-size:11px}.touch-mode .touch-utility{bottom:130px}.touch-mode .touch-utility button{min-height:40px}
+  .touch-mode .vehicle-status{bottom:182px;width:140px}.touch-mode #speed-wrap>b{font-size:30px}.touch-mode #speed-wrap>small,.touch-mode #vehicle-name,.touch-mode .rpm{display:none}
+  .touch-mode .interaction{bottom:52px;max-width:38vw}.touch-mode .look-hint{bottom:22px}
+  .touch-mode .chat{top:77px;left:220px;bottom:auto;width:30vw;max-width:240px}.touch-mode .chat p:nth-last-child(n+2){display:none}
+  .touch-mode #notifications{top:125px;left:220px;max-width:31vw}.touch-mode .toast{font-size:9px}
+  .touch-mode.chatting .chat{top:auto;bottom:12px;left:16px;width:auto;max-width:none}
+}
+@media(max-width:380px){.touch-mode .touch-actions{width:146px;right:12px}.touch-mode .touch-stick{width:116px;height:116px;left:12px}.touch-mode #stick-knob{left:35px;top:35px}.touch-mode .touch-utility{right:12px;gap:4px}.touch-mode .touch-utility button{min-width:44px;padding:5px}.touch-mode .mission-card{width:160px}.touch-mode .vehicle-status{width:120px}.touch-mode .location{display:none}}

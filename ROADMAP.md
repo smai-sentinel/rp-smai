@@ -14,3 +14,10 @@ Current release: **0.1.0 playable alpha**. The following are planned work, not e
 10. Distribution: a hosted HTTPS game server, monitoring, backups, accessibility pass and controller/touch support.
 
 GTA-scale content, photoreal faces, cinematics, licensed vehicles and a vast handcrafted map require a larger art, animation, design and engineering production. They are not represented as complete in this release.
+
+## נוסף בגרסה 0.2
+
+- פרסום לקוח ב־GitHub Pages וחיבור לשרת HTTPS נפרד.
+- שליטת מגע, פריסה לטלפון לאורך ולרוחב, שיתוף חדר ומסך מלא.
+- מצב ביצועים אוטומטי במגע והמתנה לשרת חינמי שמתעורר.
+- נדרשת עדיין בדיקה על טלפונים פיזיים ועל קול בין רשתות נפרדות.

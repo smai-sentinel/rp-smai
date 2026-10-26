@@ -268,18 +268,18 @@ export class CityRenderer {
   async loadModels() {
     const loader = new GLTFLoader();
     const results = await Promise.allSettled([
-      loader.loadAsync('/models/citizen-realistic.glb').then(gltf => {
+      loader.loadAsync(import.meta.env.BASE_URL + 'models/citizen-realistic.glb').then(gltf => {
         this.humanModel = gltf; gltf.scene.updateMatrixWorld(true);
         gltf.scene.traverse(o => { if (o.isSkinnedMesh) { o.skeleton.update(); o.computeBoundingBox(); } });
         tmpBox.setFromObject(gltf.scene, true); this.humanScale = 1.83 / tmpBox.getSize(new THREE.Vector3()).y; this.humanMinY = tmpBox.min.y;
         this.onProgress('הדמויות המונפשות מוכנות');
       }),
-      loader.loadAsync('/models/concept-car.glb').then(gltf => {
+      loader.loadAsync(import.meta.env.BASE_URL + 'models/concept-car.glb').then(gltf => {
         this.carModel = compactStaticModel(gltf.scene);
         this.carModel.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; if (o.material.transmission) { o.material.transmission = 0; o.material.transparent = true; o.material.opacity = .52; } } });
         this.onProgress('מודל הרכב המפורט מוכן');
       }),
-      new HDRLoader().loadAsync('/environment/coastal-sky.hdr').then(hdr => {
+      new HDRLoader().loadAsync(import.meta.env.BASE_URL + 'environment/coastal-sky.hdr').then(hdr => {
         hdr.mapping = THREE.EquirectangularReflectionMapping; this.scene.background = hdr; this.scene.environment = hdr;
         this.scene.backgroundBlurriness = .02; this.scene.environmentIntensity = .8; this.sky.visible = false;
       }),
@@ -297,7 +297,7 @@ export class CityRenderer {
       const wrapper = new THREE.Group(); wrapper.add(model); if (size.x > size.z) wrapper.rotation.y = Math.PI / 2;
       const lod = new THREE.LOD(); lod.addLevel(wrapper, 0);
       const low = this.baseCar.clone(true); low.traverse(o => { if (o.name === 'paint') { o.material = o.material.clone(); o.material.color.set(data.color); o.userData.paint = true; } });
-      lod.addLevel(low, 65); group.add(lod);
+      lod.addLevel(low, this.lowQuality ? 35 : 65); group.add(lod);
       model.traverse(o => { if (o.isMesh && o.material?.name?.startsWith('Paint 1')) { o.material = o.material.clone(); o.material.color.set(data.color); o.userData.paint = true; } });
     } else {
       model = this.baseCar.clone(true); model.traverse(o => { if (o.name === 'paint') { o.material = o.material.clone(); o.material.color.set(data.police ? '#e2e9e4' : data.color); o.userData.paint = true; } });
@@ -339,7 +339,7 @@ export class CityRenderer {
       const factor = object.userData.initialized ? 1 - Math.exp(-15 * dt) : 1;
       object.position.x = THREE.MathUtils.lerp(object.position.x, data.x, factor); object.position.z = THREE.MathUtils.lerp(object.position.z, data.z, factor);
       object.rotation.y += Math.atan2(Math.sin(data.yaw - object.rotation.y), Math.cos(data.yaw - object.rotation.y)) * factor;
-      object.visible = !data.vehicle && (!data.id.startsWith('ped') || object.position.distanceTo(this.camera.position) < 160); object.userData.initialized = true;
+      object.visible = !data.vehicle && (!data.id.startsWith('ped') || object.position.distanceTo(this.camera.position) < (this.lowQuality ? 70 : 160)); object.userData.initialized = true;
       if (!car) {
         const mixer = this.mixers.get(data.id); if (mixer && object.visible) { mixer.timeScale = data.down || Math.abs(data.speed || 0) < .1 ? 0 : Math.min(2.5, Math.abs(data.speed || 1.3) / 1.8); mixer.update(dt); }
         object.userData.model.rotation.z = data.down ? Math.PI / 2 : 0;
@@ -403,7 +403,11 @@ export class CityRenderer {
     this.effects = this.effects.filter(e => e.life > 0);
     this.renderer.render(this.scene, camera); return local;
   }
-  quality(high) { this.renderer.setPixelRatio(Math.min(devicePixelRatio, high ? 1.8 : 1)); this.renderer.shadowMap.enabled = high; }
+  quality(high) {
+    this.lowQuality = !high;
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio, high ? 1.8 : 1)); this.renderer.shadowMap.enabled = high;
+    for (const entity of this.entities.values()) entity.traverse(o => { if (o.isLOD && o.levels[1]) o.levels[1].distance = high ? 65 : 35; });
+  }
 }
 const cached = new Map();
 function matCached(name, color, extra = {}) { if (!cached.has(name)) cached.set(name, mat(color, extra)); return cached.get(name); }

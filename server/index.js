@@ -12,19 +12,24 @@ const passwordMatches = (provided, required) => {
   const a = Buffer.from(typeof provided === 'string' ? provided.slice(0, 256) : ''); const b = Buffer.from(required);
   return a.length === b.length && timingSafeEqual(a, b);
 };
-export async function createGameServer({ dev = false, password = process.env.ROOM_PASSWORD || '', maxRooms = 20 } = {}) {
+export async function createGameServer({ dev = false, password = process.env.ROOM_PASSWORD || '', maxRooms = Number(process.env.MAX_ROOMS) || 20, publicOrigins = (process.env.PUBLIC_ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean) } = {}) {
   const app = express(); const http = createServer(app); const rooms = new Map();
   app.disable('x-powered-by');
-  app.use((_req, res, next) => { res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Referrer-Policy', 'same-origin'); next(); });
+  app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Referrer-Policy', 'same-origin');
+    if (publicOrigins.includes(req.headers.origin)) { res.setHeader('Access-Control-Allow-Origin', req.headers.origin); res.vary('Origin'); }
+    next();
+  });
   app.get('/api/health', (_req, res) => res.json({ ok: true, game: 'RP SMAI', rooms: rooms.size, players: [...rooms.values()].reduce((n, r) => n + r.sim.players.size, 0), capacity: WORLD.maxPlayers }));
   const iceServers = [{ urls: 'stun:stun.l.google.com:19302' }];
   if (process.env.TURN_URL) iceServers.push({ urls: process.env.TURN_URL, username: process.env.TURN_USERNAME, credential: process.env.TURN_CREDENTIAL });
   const io = new Server(http, {
     maxHttpBufferSize: 32768,
+    cors: { origin: (origin, cb) => cb(null, !origin || publicOrigins.includes(origin)), methods: ['GET', 'POST'] },
     allowRequest: (req, cb) => {
       const origin = req.headers.origin;
       if (!origin) return cb(null, true);
-      try { cb(null, new URL(origin).host === req.headers.host || origin === process.env.PUBLIC_ORIGIN); } catch { cb(null, false); }
+      try { cb(null, new URL(origin).host === req.headers.host || publicOrigins.includes(origin)); } catch { cb(null, false); }
     },
   });
   io.on('connection', socket => {
