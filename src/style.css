@@ -52,9 +52,9 @@
 .touch-mode .disconnect-banner{top:20%;max-width:90%;font-size:11px;text-align:center;z-index:12}
 @media(max-width:599px) and (min-height:521px){.touch-mode .mission-card{top:130px}.touch-mode .chat{top:294px;bottom:auto;width:175px}.touch-mode #notifications{top:365px}.touch-mode.chatting .chat{top:auto;bottom:max(12px,env(safe-area-inset-bottom));width:auto}}
 @media(max-height:520px) and (min-width:600px){
-  .touch-mode .lobby{overflow:auto;pointer-events:auto;min-height:100%;height:100%;padding:78px 20px 30px;display:grid;grid-template-columns:1fr minmax(290px,360px);gap:24px;align-items:start}
-  .touch-mode .lobby-nav{top:16px;left:22px;right:22px}.touch-mode .hero-copy{position:relative;left:auto;top:auto;margin:30px 0 0}.touch-mode .hero-copy h1{font-size:54px}.touch-mode .hero-copy p{font-size:14px}.touch-mode .hero-copy .eyebrow{font-size:7px}
-  .touch-mode .join-panel{position:relative;right:auto;top:auto;transform:none;width:100%;margin:0;padding:20px}.touch-mode .lobby-footer{grid-column:1/-1;position:relative;left:auto;right:auto;bottom:auto;margin:0}
+  .lobby{overflow:auto;pointer-events:auto;min-height:100%;height:100%;padding:78px 20px 30px;display:grid;grid-template-columns:1fr minmax(290px,360px);gap:24px;align-items:start}
+  .lobby-nav{top:16px;left:22px;right:22px}.hero-copy{position:relative;left:auto;top:auto;margin:30px 0 0}.hero-copy h1{font-size:54px}.hero-copy p{font-size:14px}.hero-copy .eyebrow{font-size:7px}
+  .join-panel{position:relative;right:auto;top:auto;transform:none;width:100%;margin:0;padding:20px}.lobby-footer{grid-column:1/-1;position:relative;left:auto;right:auto;bottom:auto;margin:0}
   .touch-mode .location,.touch-mode .mission-card .eyebrow,.touch-mode .mission-card button,.touch-mode .mission-card p{display:none}.touch-mode .mission-card{top:75px;width:180px;padding:7px 10px}.touch-mode .mission-card h3{margin:0;font-size:12px}.touch-mode .mission-card .progress{margin-top:7px}
   .touch-mode .hud-tools{top:65px}.touch-mode .minimap-wrap{top:115px;width:103px}.touch-mode #minimap{height:60px}.touch-mode .map-bottom{display:none}
   .touch-mode .touch-stick{width:112px;height:112px;bottom:max(16px,env(safe-area-inset-bottom))} .touch-mode #stick-knob{left:33px;top:33px}
