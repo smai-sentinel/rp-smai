@@ -1,0 +1,916 @@
+[
+  {
+    "source": "citizen-realistic.glb",
+    "output": "citizen-optimized.glb",
+    "ratio": 0.32,
+    "error": 0.005,
+    "textureSize": 1024,
+    "before": {
+      "triangles": 91610,
+      "sceneTriangles": 91610,
+      "nodes": 70,
+      "meshes": 12,
+      "primitives": 14,
+      "skins": 1,
+      "animations": 1,
+      "textures": [
+        {
+          "name": "eyebrow001",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 89619
+        },
+        {
+          "name": "eyelashes01",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 91600
+        },
+        {
+          "name": "7db66ef3d95d1557",
+          "mime": "image/png",
+          "size": [
+            128,
+            128
+          ],
+          "bytes": 1056
+        },
+        {
+          "name": "brown_eye",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 610817
+        },
+        {
+          "name": "male_casualsuit02_normal",
+          "mime": "image/png",
+          "size": [
+            4096,
+            4096
+          ],
+          "bytes": 6036834
+        },
+        {
+          "name": "middleage_lightskinned_male_diffuse2",
+          "mime": "image/png",
+          "size": [
+            2048,
+            2048
+          ],
+          "bytes": 3730636
+        },
+        {
+          "name": "shoes01_normal",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 875473
+        },
+        {
+          "name": "shoes01_diffuse",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 1335772
+        },
+        {
+          "name": "short01_diffuse",
+          "mime": "image/png",
+          "size": [
+            2048,
+            2048
+          ],
+          "bytes": 2354146
+        },
+        {
+          "name": "teeth",
+          "mime": "image/png",
+          "size": [
+            2048,
+            2048
+          ],
+          "bytes": 1799930
+        }
+      ],
+      "bytes": 21026604,
+      "sha256": "8a48a7677eea42ab00228958614e2ee20bf93379dec483386f4b0c365af7eafe"
+    },
+    "after": {
+      "triangles": 31087,
+      "sceneTriangles": 31087,
+      "nodes": 70,
+      "meshes": 12,
+      "primitives": 14,
+      "skins": 1,
+      "animations": 1,
+      "textures": [
+        {
+          "name": "eyebrow001",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 20932
+        },
+        {
+          "name": "eyelashes01",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 35626
+        },
+        {
+          "name": "7db66ef3d95d1557",
+          "mime": "image/png",
+          "size": [
+            128,
+            128
+          ],
+          "bytes": 591
+        },
+        {
+          "name": "brown_eye",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 200265
+        },
+        {
+          "name": "male_casualsuit02_normal",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 220577
+        },
+        {
+          "name": "middleage_lightskinned_male_diffuse2",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 401323
+        },
+        {
+          "name": "shoes01_normal",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 543471
+        },
+        {
+          "name": "shoes01_diffuse",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 531152
+        },
+        {
+          "name": "short01_diffuse",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 366907
+        },
+        {
+          "name": "teeth",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 262584
+        }
+      ],
+      "bytes": 4321308
+    },
+    "validation": {
+      "numErrors": 0,
+      "numWarnings": 15,
+      "numInfos": 155,
+      "numHints": 0,
+      "messages": [
+        {
+          "code": "MESH_PRIMITIVE_GENERATED_TANGENT_SPACE",
+          "message": "Material requires a tangent space but the mesh primitive does not provide it. Runtime-generated tangent space may be non-portable across implementations.",
+          "severity": 1,
+          "pointer": "/meshes/4/primitives/0/material"
+        },
+        {
+          "code": "MESH_PRIMITIVE_GENERATED_TANGENT_SPACE",
+          "message": "Material requires a tangent space but the mesh primitive does not provide it. Runtime-generated tangent space may be non-portable across implementations.",
+          "severity": 1,
+          "pointer": "/meshes/4/primitives/1/material"
+        },
+        {
+          "code": "MESH_PRIMITIVE_GENERATED_TANGENT_SPACE",
+          "message": "Material requires a tangent space but the mesh primitive does not provide it. Runtime-generated tangent space may be non-portable across implementations.",
+          "severity": 1,
+          "pointer": "/meshes/9/primitives/0/material"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/56"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/57"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/58"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/59"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/60"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/61"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/62"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/63"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/64"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/65"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/66"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/67"
+        }
+      ],
+      "truncated": false
+    }
+  },
+  {
+    "source": "citizen-realistic.glb",
+    "output": "citizen-distant.glb",
+    "ratio": 0.08,
+    "error": 0.015,
+    "textureSize": 512,
+    "before": {
+      "triangles": 91610,
+      "sceneTriangles": 91610,
+      "nodes": 70,
+      "meshes": 12,
+      "primitives": 14,
+      "skins": 1,
+      "animations": 1,
+      "textures": [
+        {
+          "name": "eyebrow001",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 89619
+        },
+        {
+          "name": "eyelashes01",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 91600
+        },
+        {
+          "name": "7db66ef3d95d1557",
+          "mime": "image/png",
+          "size": [
+            128,
+            128
+          ],
+          "bytes": 1056
+        },
+        {
+          "name": "brown_eye",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 610817
+        },
+        {
+          "name": "male_casualsuit02_normal",
+          "mime": "image/png",
+          "size": [
+            4096,
+            4096
+          ],
+          "bytes": 6036834
+        },
+        {
+          "name": "middleage_lightskinned_male_diffuse2",
+          "mime": "image/png",
+          "size": [
+            2048,
+            2048
+          ],
+          "bytes": 3730636
+        },
+        {
+          "name": "shoes01_normal",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 875473
+        },
+        {
+          "name": "shoes01_diffuse",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 1335772
+        },
+        {
+          "name": "short01_diffuse",
+          "mime": "image/png",
+          "size": [
+            2048,
+            2048
+          ],
+          "bytes": 2354146
+        },
+        {
+          "name": "teeth",
+          "mime": "image/png",
+          "size": [
+            2048,
+            2048
+          ],
+          "bytes": 1799930
+        }
+      ],
+      "bytes": 21026604,
+      "sha256": "8a48a7677eea42ab00228958614e2ee20bf93379dec483386f4b0c365af7eafe"
+    },
+    "after": {
+      "triangles": 10714,
+      "sceneTriangles": 10714,
+      "nodes": 70,
+      "meshes": 12,
+      "primitives": 14,
+      "skins": 1,
+      "animations": 1,
+      "textures": [
+        {
+          "name": "eyebrow001",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 20932
+        },
+        {
+          "name": "eyelashes01",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 35626
+        },
+        {
+          "name": "7db66ef3d95d1557",
+          "mime": "image/png",
+          "size": [
+            128,
+            128
+          ],
+          "bytes": 591
+        },
+        {
+          "name": "brown_eye",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 60592
+        },
+        {
+          "name": "male_casualsuit02_normal",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 55325
+        },
+        {
+          "name": "middleage_lightskinned_male_diffuse2",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 105962
+        },
+        {
+          "name": "shoes01_normal",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 157973
+        },
+        {
+          "name": "shoes01_diffuse",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 123804
+        },
+        {
+          "name": "short01_diffuse",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 112592
+        },
+        {
+          "name": "teeth",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 97556
+        }
+      ],
+      "bytes": 1596780
+    },
+    "validation": {
+      "numErrors": 0,
+      "numWarnings": 15,
+      "numInfos": 155,
+      "numHints": 0,
+      "messages": [
+        {
+          "code": "MESH_PRIMITIVE_GENERATED_TANGENT_SPACE",
+          "message": "Material requires a tangent space but the mesh primitive does not provide it. Runtime-generated tangent space may be non-portable across implementations.",
+          "severity": 1,
+          "pointer": "/meshes/4/primitives/0/material"
+        },
+        {
+          "code": "MESH_PRIMITIVE_GENERATED_TANGENT_SPACE",
+          "message": "Material requires a tangent space but the mesh primitive does not provide it. Runtime-generated tangent space may be non-portable across implementations.",
+          "severity": 1,
+          "pointer": "/meshes/4/primitives/1/material"
+        },
+        {
+          "code": "MESH_PRIMITIVE_GENERATED_TANGENT_SPACE",
+          "message": "Material requires a tangent space but the mesh primitive does not provide it. Runtime-generated tangent space may be non-portable across implementations.",
+          "severity": 1,
+          "pointer": "/meshes/9/primitives/0/material"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/56"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/57"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/58"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/59"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/60"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/61"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/62"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/63"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/64"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/65"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/66"
+        },
+        {
+          "code": "NODE_SKINNED_MESH_NON_ROOT",
+          "message": "Node with a skinned mesh is not root. Parent transforms will not affect a skinned mesh.",
+          "severity": 1,
+          "pointer": "/nodes/67"
+        }
+      ],
+      "truncated": false
+    }
+  },
+  {
+    "source": "concept-car.glb",
+    "output": "concept-optimized.glb",
+    "ratio": 0.29,
+    "error": 0.008,
+    "textureSize": 1024,
+    "before": {
+      "triangles": 213347,
+      "sceneTriangles": 213347,
+      "nodes": 101,
+      "meshes": 97,
+      "primitives": 109,
+      "skins": 0,
+      "animations": 0,
+      "textures": [
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 358161
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 106027
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            2048,
+            2048
+          ],
+          "bytes": 1567628
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            512,
+            128
+          ],
+          "bytes": 8177
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            64,
+            32
+          ],
+          "bytes": 3528
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            32,
+            32
+          ],
+          "bytes": 198
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            1024,
+            256
+          ],
+          "bytes": 31201
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            128,
+            128
+          ],
+          "bytes": 46314
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            128,
+            128
+          ],
+          "bytes": 343
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            128,
+            128
+          ],
+          "bytes": 8500
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 23370
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 475684
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            512,
+            128
+          ],
+          "bytes": 53752
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 240363
+        }
+      ],
+      "bytes": 11778688,
+      "sha256": "c272098089d78c5cd9fd9f24ff50ee8acf8d932c55f2d55fc10adb6c8998966b"
+    },
+    "after": {
+      "triangles": 65687,
+      "sceneTriangles": 65687,
+      "nodes": 101,
+      "meshes": 97,
+      "primitives": 109,
+      "skins": 0,
+      "animations": 0,
+      "textures": [
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 86018
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 44876
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 367342
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            512,
+            128
+          ],
+          "bytes": 6082
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            64,
+            32
+          ],
+          "bytes": 2387
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            32,
+            32
+          ],
+          "bytes": 168
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            1024,
+            256
+          ],
+          "bytes": 15053
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            128,
+            128
+          ],
+          "bytes": 17362
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            128,
+            128
+          ],
+          "bytes": 452
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            128,
+            128
+          ],
+          "bytes": 3669
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 7033
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            1024,
+            1024
+          ],
+          "bytes": 204756
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            512,
+            128
+          ],
+          "bytes": 18736
+        },
+        {
+          "name": "",
+          "mime": "image/png",
+          "size": [
+            512,
+            512
+          ],
+          "bytes": 103765
+        }
+      ],
+      "bytes": 4431752
+    },
+    "validation": {
+      "numErrors": 0,
+      "numWarnings": 0,
+      "numInfos": 0,
+      "numHints": 0,
+      "messages": [],
+      "truncated": false
+    }
+  }
+]

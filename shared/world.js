@@ -31,9 +31,30 @@ obstacles.push(
   { x: -60, z: -67, w: 76, d: 64 }, { x: 180, z: 65, w: 76, d: 50 },
   { x: -180, z: 64, w: 72, d: 60 }, { x: -300, z: 279, w: 70, d: 46 },
 );
+// The city geometry is static. Index its AABBs once so movement/camera queries
+// inspect nearby walls instead of scanning every building on every substep.
+const COLLISION_CELL = 48;
+const minCell = Math.floor(WORLD.min / COLLISION_CELL);
+const cellCount = Math.floor(WORLD.max / COLLISION_CELL) - minCell + 1;
+const collisionCells = Array.from({ length: cellCount * cellCount }, () => []);
+for (const obstacle of obstacles) {
+  const x0 = Math.floor((obstacle.x - obstacle.w / 2) / COLLISION_CELL);
+  const x1 = Math.floor((obstacle.x + obstacle.w / 2) / COLLISION_CELL);
+  const z0 = Math.floor((obstacle.z - obstacle.d / 2) / COLLISION_CELL);
+  const z1 = Math.floor((obstacle.z + obstacle.d / 2) / COLLISION_CELL);
+  for (let x = x0; x <= x1; x++) for (let z = z0; z <= z1; z++) {
+    collisionCells[(x - minCell) * cellCount + z - minCell].push(obstacle);
+  }
+}
 export function blocked(x, z, radius = 0.5) {
   if (x < WORLD.min + radius || x > WORLD.max - radius || z < WORLD.min + radius || z > WORLD.max - radius) return true;
-  return obstacles.some(b => Math.abs(x - b.x) < b.w / 2 + radius && Math.abs(z - b.z) < b.d / 2 + radius);
+  const x0 = Math.floor((x - radius) / COLLISION_CELL), x1 = Math.floor((x + radius) / COLLISION_CELL);
+  const z0 = Math.floor((z - radius) / COLLISION_CELL), z1 = Math.floor((z + radius) / COLLISION_CELL);
+  for (let cx = x0; cx <= x1; cx++) for (let cz = z0; cz <= z1; cz++) {
+    const nearby = collisionCells[(cx - minCell) * cellCount + cz - minCell];
+    for (const b of nearby || []) if (Math.abs(x - b.x) < b.w / 2 + radius && Math.abs(z - b.z) < b.d / 2 + radius) return true;
+  }
+  return false;
 }
 export function moveBody(body, dx, dz, radius) {
   let hit = false;
@@ -46,4 +67,3 @@ export function moveBody(body, dx, dz, radius) {
 }
 export function distance(a, b) { return Math.hypot(a.x - b.x, a.z - b.z); }
 export function district(x, z) { return z > 285 ? 'OCEAN DRIVE' : x < -220 ? 'WESTSIDE' : z < -200 ? 'NORTH HEIGHTS' : x > 140 ? 'PALM DISTRICT' : 'SENTINEL DOWNTOWN'; }
-

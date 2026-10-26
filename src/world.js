@@ -12,6 +12,32 @@ const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, rough
 const dummy = new THREE.Object3D();
 const tmpBox = new THREE.Box3();
 const tempV = new THREE.Vector3();
+const duskColor = new THREE.Color('#bdafa3'), nightColor = new THREE.Color('#172d43');
+const skyTop = new THREE.Color('#567f99'), skyBottom = new THREE.Color('#f1cba2');
+const cameraTarget = new THREE.Vector3();
+const ikShoulder = new THREE.Vector3(), ikElbow = new THREE.Vector3(), ikHand = new THREE.Vector3(), ikTarget = new THREE.Vector3();
+const ikDirection = new THREE.Vector3(), ikBend = new THREE.Vector3(), ikDesired = new THREE.Vector3(), ikFrom = new THREE.Vector3(), ikTo = new THREE.Vector3();
+const ikDelta = new THREE.Quaternion(), ikWorld = new THREE.Quaternion(), ikParent = new THREE.Quaternion();
+function aimBone(bone, from, to) {
+  if (from.lengthSq() < .000001 || to.lengthSq() < .000001) return;
+  ikDelta.setFromUnitVectors(from.normalize(), to.normalize()); bone.getWorldQuaternion(ikWorld); bone.parent.getWorldQuaternion(ikParent);
+  bone.quaternion.copy(ikParent.invert().multiply(ikDelta.multiply(ikWorld))); bone.updateMatrixWorld(true);
+}
+function poseArm(group, side, x, y, z, raised = false) {
+  const bones = group.userData.bones, upper = bones[`upperarm_${side}`], lower = bones[`lowerarm_${side}`], hand = bones[`hand_${side}`];
+  if (!upper || !lower || !hand) return;
+  upper.getWorldPosition(ikShoulder); lower.getWorldPosition(ikElbow); hand.getWorldPosition(ikHand);
+  group.localToWorld(ikTarget.set(x, y, z));
+  const a = ikShoulder.distanceTo(ikElbow), b = ikElbow.distanceTo(ikHand);
+  ikDirection.subVectors(ikTarget, ikShoulder); const distance = THREE.MathUtils.clamp(ikDirection.length(), Math.abs(a - b) + .001, a + b - .001); ikDirection.normalize();
+  const along = (a * a - b * b + distance * distance) / (2 * distance);
+  ikBend.set(side === 'r' ? -.6 : .6, raised ? .1 : -.8, 0).transformDirection(group.matrixWorld);
+  ikBend.addScaledVector(ikDirection, -ikBend.dot(ikDirection)).normalize();
+  ikDesired.copy(ikShoulder).addScaledVector(ikDirection, along).addScaledVector(ikBend, Math.sqrt(Math.max(0, a * a - along * along)));
+  aimBone(upper, ikFrom.subVectors(ikElbow, ikShoulder), ikTo.subVectors(ikDesired, ikShoulder));
+  lower.getWorldPosition(ikElbow); hand.getWorldPosition(ikHand);
+  aimBone(lower, ikFrom.subVectors(ikHand, ikElbow), ikTo.subVectors(ikTarget, ikElbow));
+}
 class Batcher {
   constructor(scene) { this.scene = scene; this.batches = new Map(); }
   add(geo, material, x, y, z, rotation = 0) {
@@ -54,17 +80,45 @@ function mesh(geo, material, parent, x = 0, y = 0, z = 0) {
 }
 function compactStaticModel(source) {
   source.updateMatrixWorld(true); const batches = new Map(); const result = new THREE.Group();
+  // Bake the body by material, but retain four independent wheel pivots.
+  const front = new THREE.Vector3(), rear = new THREE.Vector3();
+  const wheelNames = ['WheelFrontL', 'WheelFrontR', 'WheelRearL', 'WheelRearR'];
+  for (const name of wheelNames) source.getObjectByName(name)?.getWorldPosition(tempV) && (name.includes('Front') ? front : rear).add(tempV);
+  const direction = front.sub(rear); const heading = Math.atan2(direction.x, direction.z);
+  const rotate = new THREE.Matrix4().makeRotationY(-heading);
+  const bounds = new THREE.Box3();
+  source.traverse(o => { if (o.isMesh) { o.geometry.computeBoundingBox(); bounds.union(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld).applyMatrix4(rotate)); } });
+  const center = bounds.getCenter(new THREE.Vector3()), size = bounds.getSize(new THREE.Vector3()), scale = 4.7 / size.z;
+  const normalize = new THREE.Matrix4().makeScale(scale, scale, scale).multiply(new THREE.Matrix4().makeTranslation(-center.x, -bounds.min.y, -center.z)).multiply(rotate);
+  const groups = new Map(), wheelCorrections = new Map();
+  const body = new THREE.Group(); body.name = 'body'; result.add(body); groups.set('body', body);
+  for (const name of wheelNames) {
+    const wheel = source.getObjectByName(name); if (!wheel) continue;
+    const pivot = new THREE.Group(); pivot.name = name; wheel.getWorldPosition(pivot.position).applyMatrix4(normalize);
+    pivot.userData.front = name.includes('Front'); result.add(pivot); groups.set(name, pivot);
+    if (pivot.userData.front) {
+      // This asset is authored with its front wheels steered by 30 degrees.
+      // Unsteer around the wheel center so runtime X-roll uses the true axle.
+      const axle = new THREE.Vector3(1, 0, 0).transformDirection(wheel.matrixWorld).transformDirection(rotate);
+      if (axle.x < 0) axle.negate();
+      wheelCorrections.set(name, new THREE.Matrix4().makeRotationY(Math.atan2(axle.z, axle.x)));
+    }
+  }
   source.traverse(o => {
     if (!o.isMesh || Array.isArray(o.material)) return;
+    let ancestor = o; while (ancestor.parent && !wheelNames.includes(ancestor.name)) ancestor = ancestor.parent;
+    const group = groups.get(ancestor.name) || body;
     let geometry = o.geometry.clone(); if (geometry.index) { const old = geometry; geometry = geometry.toNonIndexed(); old.dispose(); }
-    geometry.applyMatrix4(o.matrixWorld);
+    geometry.applyMatrix4(o.matrixWorld).applyMatrix4(normalize).translate(-group.position.x, -group.position.y, -group.position.z);
+    const wheelCorrection = wheelCorrections.get(group.name); if (wheelCorrection) geometry.applyMatrix4(wheelCorrection);
     for (const key of Object.keys(geometry.attributes)) if (!['position', 'normal', 'uv', 'uv1'].includes(key)) geometry.deleteAttribute(key);
     if (!geometry.attributes.normal) geometry.computeVertexNormals();
     if (!geometry.attributes.uv) geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(geometry.attributes.position.count * 2), 2));
     if (!geometry.attributes.uv1) geometry.setAttribute('uv1', geometry.attributes.uv.clone());
-    if (!batches.has(o.material)) batches.set(o.material, []); batches.get(o.material).push(geometry);
+    const key = `${group.name}:${o.material.uuid}`;
+    if (!batches.has(key)) batches.set(key, { group, material: o.material, geometries: [] }); batches.get(key).geometries.push(geometry);
   });
-  for (const [material, geometries] of batches) { mesh(mergeGeometries(geometries), material, result); geometries.forEach(g => g.dispose()); }
+  for (const { group, material, geometries } of batches.values()) { mesh(mergeGeometries(geometries), material, group); geometries.forEach(g => g.dispose()); }
   return result;
 }
 function label(text, width = 12, color = '#e3efeb', bg = '#12252d', height = 1.9) {
@@ -86,11 +140,14 @@ export class CityRenderer {
     const pmrem = new THREE.PMREMGenerator(this.renderer); const room = new RoomEnvironment();
     this.environment = pmrem.fromScene(room, .04); this.scene.environment = this.environment.texture; this.scene.environmentIntensity = .55; room.dispose(); pmrem.dispose();
     this.sun = new THREE.DirectionalLight('#ffe1b2', 3.1); this.sun.position.set(-170, 180, 160); this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(2048, 2048); Object.assign(this.sun.shadow.camera, { left: -100, right: 100, top: 100, bottom: -100, near: 10, far: 600 });
+    this.sun.shadow.mapSize.set(1024, 1024); Object.assign(this.sun.shadow.camera, { left: -70, right: 70, top: 70, bottom: -70, near: 10, far: 600 });
     this.sun.shadow.bias = -.0003; this.sun.shadow.normalBias = .25; this.scene.add(this.sun, this.sun.target);
     this.ambient = new THREE.HemisphereLight('#b4cbd9', '#665b4b', 1.5); this.scene.add(this.ambient);
     this.buildSky(); this.buildCity(); this.createTemplates();
     this.resize = () => { this.camera.aspect = innerWidth / innerHeight; this.camera.updateProjectionMatrix(); this.renderer.setSize(innerWidth, innerHeight); };
+    this.stats = { fps: 0, drawCalls: 0, triangles: 0, pixelRatio: this.renderer.getPixelRatio() };
+    this.frameWindow = performance.now(); this.frameCount = 0; this.slowWindows = 0; this.fastWindows = 0;
+    this.qualityMode = 'auto'; this.qualityTier = 1;
     window.addEventListener('resize', this.resize); this.ready = this.loadModels();
   }
   buildSky() {
@@ -229,6 +286,7 @@ export class CityRenderer {
       const sign = label(title, w * .75, color, '#233d42', 2.5); sign.position.set(x, h - .5, z - d / 2 - .25); sign.rotation.y = Math.PI; this.scene.add(sign);
     };
     landmarkBuilding(-60, -67, 76, 64, 14, 'SMAI POLICE DEPARTMENT', '#a9d3ff');
+    const prisonSign = label('DETENTION CENTER / SMAI', 30, '#ffc392', '#283b42', 1.5); prisonSign.position.set(-60, 5.8, -99.3); prisonSign.rotation.y = Math.PI; this.scene.add(prisonSign);
     landmarkBuilding(180, 65, 76, 50, 10, 'COAST CUSTOMS', '#ddfca0');
     landmarkBuilding(-180, 64, 72, 60, 22, 'SMAI MEDICAL CENTER', '#ffb4a5');
     landmarkBuilding(-300, 279, 70, 46, 7, 'SOUTH COAST STORAGE', '#dcc8ed');
@@ -247,12 +305,13 @@ export class CityRenderer {
     const cabin = mesh(new RoundedBoxGeometry(1.65, .65, 2.1, 3, .22), dark, this.baseCar, 0, 1.24, -.1); cabin.scale.set(1, 1, 1);
     mesh(new RoundedBoxGeometry(1.65, .12, 1.3, 2, .09), body, this.baseCar, 0, 1.59, -.2).name = 'paint';
     for (const x of [-1, 1]) for (const z of [-1.45, 1.45]) {
-      const wheel = mesh(new THREE.CylinderGeometry(.39, .39, .26, 18), rubber, this.baseCar, x, .42, z); wheel.rotation.z = Math.PI / 2;
-      const rim = mesh(new THREE.CylinderGeometry(.25, .25, .28, 10), chrome, this.baseCar, x, .42, z); rim.rotation.z = Math.PI / 2;
+      const pivot = new THREE.Group(); pivot.position.set(x, .42, z); pivot.name = `Wheel${z > 0 ? 'Front' : 'Rear'}${x > 0 ? 'L' : 'R'}`; pivot.userData.front = z > 0; this.baseCar.add(pivot);
+      const wheel = mesh(new THREE.CylinderGeometry(.39, .39, .26, 12), rubber, pivot); wheel.rotation.z = Math.PI / 2;
+      const rim = mesh(new THREE.CylinderGeometry(.25, .25, .28, 8), chrome, pivot); rim.rotation.z = Math.PI / 2;
     }
     for (const x of [-.7, .7]) {
       mesh(new THREE.BoxGeometry(.43, .13, .04), mat('#f8edc9', { emissive: '#fff0c0', emissiveIntensity: 1.5 }), this.baseCar, x, .9, 2.26);
-      mesh(new THREE.BoxGeometry(.42, .13, .04), mat('#9d2525', { emissive: '#c12919', emissiveIntensity: .7 }), this.baseCar, x, .9, -2.26);
+      mesh(new THREE.BoxGeometry(.42, .13, .04), mat('#9d2525', { emissive: '#c12919', emissiveIntensity: .7 }), this.baseCar, x, .9, -2.26).name = 'brake-light';
     }
     this.personFallback = new THREE.Group();
     const skin = mat('#b99b81'), coat = mat('#49616c'), pants = mat('#25363d');
@@ -264,17 +323,20 @@ export class CityRenderer {
     mesh(new RoundedBoxGeometry(.12, .12, .42, 1, .025), mat('#293138', { metalness: .7, roughness: .3 }), this.gunTemplate, 0, 0, .12);
     const grip = mesh(new THREE.BoxGeometry(.105, .22, .14), mat('#131c21'), this.gunTemplate, 0, -.12, -.02); grip.rotation.x = -.2;
     mesh(new THREE.BoxGeometry(.025, .035, .03), mat('#c7d4b3'), this.gunTemplate, 0, .08, .28);
+    this.firstPersonGun = this.gunTemplate.clone(true); this.firstPersonGun.position.set(.2, -.2, -.45); this.firstPersonGun.rotation.y = Math.PI;
+    this.firstPersonGun.visible = false; this.camera.add(this.firstPersonGun); this.scene.add(this.camera);
   }
   async loadModels() {
     const loader = new GLTFLoader();
     const results = await Promise.allSettled([
-      loader.loadAsync(import.meta.env.BASE_URL + 'models/citizen-realistic.glb').then(gltf => {
+      loader.loadAsync(import.meta.env.BASE_URL + 'models/citizen-optimized.glb').then(gltf => {
         this.humanModel = gltf; gltf.scene.updateMatrixWorld(true);
         gltf.scene.traverse(o => { if (o.isSkinnedMesh) { o.skeleton.update(); o.computeBoundingBox(); } });
         tmpBox.setFromObject(gltf.scene, true); this.humanScale = 1.83 / tmpBox.getSize(new THREE.Vector3()).y; this.humanMinY = tmpBox.min.y;
         this.onProgress('הדמויות המונפשות מוכנות');
       }),
-      loader.loadAsync(import.meta.env.BASE_URL + 'models/concept-car.glb').then(gltf => {
+      loader.loadAsync(import.meta.env.BASE_URL + 'models/citizen-distant.glb').then(gltf => { this.distantHumanModel = gltf; }),
+      loader.loadAsync(import.meta.env.BASE_URL + 'models/concept-optimized.glb').then(gltf => {
         this.carModel = compactStaticModel(gltf.scene);
         this.carModel.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; if (o.material.transmission) { o.material.transmission = 0; o.material.transparent = true; o.material.opacity = .52; } } });
         this.onProgress('מודל הרכב המפורט מוכן');
@@ -292,12 +354,10 @@ export class CityRenderer {
     const group = new THREE.Group(); let model;
     // Detailed cars nearby; lightweight geometry for distant traffic.
     if (this.carModel) {
-      model = this.carModel.clone(true); tmpBox.setFromObject(model); const size = tmpBox.getSize(new THREE.Vector3()); const center = tmpBox.getCenter(new THREE.Vector3());
-      const scale = 4.7 / Math.max(size.x, size.z); model.scale.multiplyScalar(scale); model.position.set(-center.x * scale, -tmpBox.min.y * scale + .04, -center.z * scale);
-      const wrapper = new THREE.Group(); wrapper.add(model); if (size.x > size.z) wrapper.rotation.y = Math.PI / 2;
-      const lod = new THREE.LOD(); lod.addLevel(wrapper, 0);
+      model = this.carModel.clone(true); model.position.y = .04;
+      const lod = new THREE.LOD(); lod.addLevel(model, 0);
       const low = this.baseCar.clone(true); low.traverse(o => { if (o.name === 'paint') { o.material = o.material.clone(); o.material.color.set(data.color); o.userData.paint = true; } });
-      lod.addLevel(low, this.lowQuality ? 35 : 65); group.add(lod);
+      lod.addLevel(low, [25, 40, 60][this.qualityTier]); group.add(lod);
       model.traverse(o => { if (o.isMesh && o.material?.name?.startsWith('Paint 1')) { o.material = o.material.clone(); o.material.color.set(data.color); o.userData.paint = true; } });
     } else {
       model = this.baseCar.clone(true); model.traverse(o => { if (o.name === 'paint') { o.material = o.material.clone(); o.material.color.set(data.police ? '#e2e9e4' : data.color); o.userData.paint = true; } });
@@ -309,26 +369,36 @@ export class CityRenderer {
       const blue = mesh(new THREE.BoxGeometry(.45, .16, .3), new THREE.MeshBasicMaterial({ color: '#4d9aff' }), group, .4, 1.91, 0); blue.name = 'blue';
       const sign = label('POLICE', 1.5, '#183747', '#e2e9e4', .35); sign.position.set(0, 1.03, -2.3); sign.rotation.y = Math.PI; group.add(sign);
     }
+    const brake = new THREE.MeshBasicMaterial({ color: '#ff452d', transparent: true, opacity: .9 });
+    for (const x of [-.67, .67]) mesh(new THREE.BoxGeometry(.38, .08, .018), brake, group, x, .63, -2.36).castShadow = false;
+    group.userData.brake = brake; group.userData.wheels = []; group.traverse(o => { if (o.name.startsWith('Wheel')) group.userData.wheels.push(o); });
+    group.userData.body = model.getObjectByName('body'); group.userData.wheelRoll = 0;
     group.userData.color = data.color; this.scene.add(group); this.entities.set(data.id, group); return group;
   }
   makePerson(data) {
     const group = new THREE.Group(); let model;
     if (this.humanModel) {
-      model = skeletonClone(this.humanModel.scene); const scale = this.humanScale;
+      const source = data.id.startsWith('ped') && this.distantHumanModel ? this.distantHumanModel : this.humanModel;
+      model = skeletonClone(source.scene); const scale = this.humanScale;
       model.scale.multiplyScalar(scale); model.position.y = -this.humanMinY * scale;
       model.traverse(o => { if (o.isMesh) {
         o.castShadow = true; o.frustumCulled = false;
-        if (o.material?.name?.includes('original top')) { o.material = o.material.clone(); o.material.color.set(data.role === 'police' ? '#243d64' : data.color || '#697c64'); }
+        if (o.material?.name?.includes('original top')) { o.material = o.material.clone(); o.material.color.set(data.role === 'police' ? '#243d64' : data.color || '#697c64'); o.userData.shirt = true; }
         if (o.name === 'held_accessory' || o.material?.name?.includes('accessory') || o.material?.name?.includes('Accessory')) o.visible = false;
       } });
-      const mixer = new THREE.AnimationMixer(model); const clip = this.humanModel.animations[0]; if (clip) { const action = mixer.clipAction(clip); action.play(); action.time = Math.random() * clip.duration; }
+      const mixer = new THREE.AnimationMixer(model); const clip = source.animations[0]; if (clip) { const action = mixer.clipAction(clip); action.play(); action.time = Math.random() * clip.duration; }
       this.mixers.set(data.id, mixer);
     } else model = this.personFallback.clone(true);
     group.add(model); group.userData.model = model;
     if (!data.id.startsWith('ped')) {
-      const gun = this.gunTemplate.clone(true); gun.position.set(-.33, 1.43, .37); gun.visible = false; group.add(gun); group.userData.gun = gun;
-      if (data.role === 'police') { mesh(new THREE.CylinderGeometry(.18, .18, .08, 12), mat('#1d3357'), group, 0, 1.83, 0); }
+      const gun = this.gunTemplate.clone(true); gun.position.set(.14, 1.4, .58); gun.visible = false; group.add(gun); group.userData.gun = gun;
+      const hat = mesh(new THREE.CylinderGeometry(.18, .18, .08, 12), matCached('police-hat', '#1d3357'), group, 0, 1.83, 0); hat.visible = data.role === 'police'; group.userData.hat = hat;
     }
+    group.userData.bones = Object.fromEntries(['upperarm_l', 'lowerarm_l', 'hand_l', 'upperarm_r', 'lowerarm_r', 'hand_r'].map(name => [name, model.getObjectByName(name)]));
+    group.userData.basePose = Object.fromEntries(Object.entries(group.userData.bones).filter(([, bone]) => bone).map(([name, bone]) => [name, bone.quaternion.clone()]));
+    const cuffs = new THREE.Group(); const metal = matCached('cuff-metal', '#acb9bf', { metalness: .9, roughness: .2 });
+    for (const x of [-.1, .1]) { const ring = mesh(new THREE.TorusGeometry(.055, .014, 5, 10), metal, cuffs, x, 0, 0); ring.rotation.x = Math.PI / 2; }
+    mesh(new THREE.BoxGeometry(.12, .018, .018), metal, cuffs); cuffs.position.set(0, .95, -.25); cuffs.visible = false; group.add(cuffs); group.userData.cuffs = cuffs;
     this.scene.add(group); this.entities.set(data.id, group); return group;
   }
   updateEntities(state, dt, localId) {
@@ -339,15 +409,38 @@ export class CityRenderer {
       const factor = object.userData.initialized ? 1 - Math.exp(-15 * dt) : 1;
       object.position.x = THREE.MathUtils.lerp(object.position.x, data.x, factor); object.position.z = THREE.MathUtils.lerp(object.position.z, data.z, factor);
       object.rotation.y += Math.atan2(Math.sin(data.yaw - object.rotation.y), Math.cos(data.yaw - object.rotation.y)) * factor;
-      object.visible = !data.vehicle && (!data.id.startsWith('ped') || object.position.distanceTo(this.camera.position) < (this.lowQuality ? 70 : 160)); object.userData.initialized = true;
+      object.visible = !data.vehicle && (object.position.distanceToSquared(this.camera.position) < (car ? 260 ** 2 : data.id.startsWith('ped') ? (this.lowQuality ? 65 : 120) ** 2 : 300 ** 2)); object.userData.initialized = true;
       if (!car) {
+        if (object.userData.posed) for (const [name, quaternion] of Object.entries(object.userData.basePose)) object.userData.bones[name].quaternion.copy(quaternion);
         const mixer = this.mixers.get(data.id); if (mixer && object.visible) { mixer.timeScale = data.down || Math.abs(data.speed || 0) < .1 ? 0 : Math.min(2.5, Math.abs(data.speed || 1.3) / 1.8); mixer.update(dt); }
         object.userData.model.rotation.z = data.down ? Math.PI / 2 : 0;
-        if (object.userData.gun) object.userData.gun.visible = !!data.aiming;
-        if (data.aiming && mixer) mixer.timeScale = 0;
+        const restricted = data.cuffed > 0 || data.jail > 0 || data.down;
+        if (object.userData.gun) {
+          object.userData.gun.visible = !!data.aiming && !restricted;
+          object.userData.gun.rotation.x = -(data.pitch || 0);
+          object.userData.gun.position.set(.14, 1.4 + Math.sin(data.pitch || 0) * .58, Math.cos(data.pitch || 0) * .58);
+        }
+        object.userData.cuffs.visible = data.cuffed > 0;
+        const outfit = data.jail > 0 ? 'prisoner' : data.role || 'civilian';
+        if (object.userData.outfit !== outfit) {
+          object.userData.model.traverse(o => { if (o.userData.shirt) o.material.color.set(outfit === 'prisoner' ? '#d7742e' : outfit === 'police' ? '#243d64' : data.color || '#697c64'); });
+          if (object.userData.hat) object.userData.hat.visible = outfit === 'police'; object.userData.outfit = outfit;
+        }
+        object.userData.posed = object.visible && !data.down && (!!data.aiming || data.cuffed > 0 || !!data.hostageBy);
+        if (object.userData.posed) {
+          for (const [name, quaternion] of Object.entries(object.userData.basePose)) quaternion.copy(object.userData.bones[name].quaternion);
+          object.updateMatrixWorld(true);
+          if (data.cuffed > 0) { poseArm(object, 'l', .1, .95, -.25); poseArm(object, 'r', -.1, .95, -.25); }
+          else if (data.hostageBy) { poseArm(object, 'l', .4, 1.88, .08, true); poseArm(object, 'r', -.4, 1.88, .08, true); }
+          else if (!restricted) { const pitch = data.pitch || 0; poseArm(object, 'r', .14, 1.33 + Math.sin(pitch) * .58, Math.cos(pitch) * .58); poseArm(object, 'l', .05, 1.34 + Math.sin(pitch) * .63, Math.cos(pitch) * .63); }
+        }
       } else {
         if (object.userData.color !== data.color) { object.traverse(o => { if (o.userData.paint) o.material.color.set(data.color); }); object.userData.color = data.color; }
         if (data.police) { object.getObjectByName('red').visible = data.siren && Math.sin(state.time * 19) > 0; object.getObjectByName('blue').visible = data.siren && Math.sin(state.time * 19) < 0; }
+        object.userData.wheelRoll += (data.speed || 0) * dt / .36;
+        for (const wheel of object.userData.wheels) { wheel.rotation.set(object.userData.wheelRoll, wheel.userData.front ? data.steer || 0 : 0, 0, 'YXZ'); }
+        if (object.userData.body) { object.userData.body.rotation.z = THREE.MathUtils.lerp(object.userData.body.rotation.z, -(data.steer || 0) * Math.min(Math.abs(data.speed || 0), 20) * .009, factor); object.userData.body.rotation.x = THREE.MathUtils.lerp(object.userData.body.rotation.x, data.braking ? -.025 : 0, factor); }
+        object.userData.brake.opacity = data.braking ? 1 : .12;
       }
     }
     for (const [id, obj] of this.entities) if (!seen.has(id)) { this.scene.remove(obj); this.entities.delete(id); this.mixers.delete(id); }
@@ -367,6 +460,7 @@ export class CityRenderer {
   }
   render(state, localId, view, dt, elapsed) {
     const local = this.updateEntities(state, dt, localId); const camera = this.camera;
+    this.firstPersonGun.visible = !!local && view.firstPerson && !local.vehicle && !local.jail && !local.cuffed && !!local.aiming;
     if (!local) {
       const angle = elapsed * .016; camera.position.set(65 + Math.sin(angle) * 105, 67, 125 + Math.cos(angle) * 75); camera.lookAt(30, 14, 0);
     } else {
@@ -379,7 +473,7 @@ export class CityRenderer {
       if (!local.jail && !view.firstPerson) {
         for (let t = 1; t > .1; t -= .1) { if (!blocked(p.x + (cx - p.x) * t, p.z + (cz - p.z) * t, .2)) { cx = p.x + (cx - p.x) * t; cz = p.z + (cz - p.z) * t; break; } }
       }
-      const targetPos = v3(cx, height - Math.sin(view.pitch) * distance, cz);
+      const targetPos = cameraTarget.set(cx, height - Math.sin(view.pitch) * distance, cz);
       const smooth = local.aiming || view.firstPerson ? 1 : 1 - Math.exp(-8 * dt);
       camera.position.lerp(targetPos, view.justStarted ? 1 : smooth); view.justStarted = false;
       const aimHeight = local.aiming ? 1.5 : view.firstPerson ? height : 1.3;
@@ -393,20 +487,45 @@ export class CityRenderer {
     const day = Math.max(.12, Math.min(1, .2 + Math.sin((state.clock - 6) / 12 * Math.PI) * 1.8));
     this.sun.intensity = .3 + day * 2.3; this.ambient.intensity = .6 + day * .85;
     this.scene.backgroundIntensity = .25 + day * 1.1;
-    const dusk = new THREE.Color('#bdafa3'), night = new THREE.Color('#172d43'); this.scene.fog.color.copy(night).lerp(dusk, day);
-    this.sky.material.uniforms.top.value.set('#13263c').lerp(new THREE.Color('#567f99'), day);
-    this.sky.material.uniforms.bottom.value.set('#33465a').lerp(new THREE.Color('#f1cba2'), day);
+    this.scene.fog.color.copy(nightColor).lerp(duskColor, day);
+    this.sky.material.uniforms.top.value.set('#13263c').lerp(skyTop, day);
+    this.sky.material.uniforms.bottom.value.set('#33465a').lerp(skyBottom, day);
     this.sky.position.copy(camera.position); this.sky.material.uniforms.time.value = elapsed; this.water.material.uniforms.time.value = elapsed;
     this.facades.forEach(m => m.emissiveIntensity = .12 + (1 - day) * .28);
     for (const o of this.scene.children) if (o.userData.marker) { o.position.y = o.userData.base + Math.sin(elapsed * 2) * .35; o.rotation.y = elapsed; }
     for (const e of this.effects) { e.life -= dt; if (e.life <= 0) { this.scene.remove(e.object); e.object.geometry.dispose(); e.object.material.dispose(); } }
     this.effects = this.effects.filter(e => e.life > 0);
-    this.renderer.render(this.scene, camera); return local;
+    this.renderer.render(this.scene, camera); this.trackPerformance(); return local;
   }
-  quality(high) {
-    this.lowQuality = !high;
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, high ? 1.8 : 1)); this.renderer.shadowMap.enabled = high;
-    for (const entity of this.entities.values()) entity.traverse(o => { if (o.isLOD && o.levels[1]) o.levels[1].distance = high ? 65 : 35; });
+  quality(high) { this.setQualityMode(high ? 'high' : 'low'); }
+  setQualityMode(mode) {
+    this.qualityMode = ['auto', 'high', 'low'].includes(mode) ? mode : 'auto';
+    this.slowWindows = this.fastWindows = 0;
+    this.applyQuality(this.qualityMode === 'high' ? 2 : this.qualityMode === 'low' ? 0 : matchMedia('(pointer: coarse)').matches ? 0 : 1);
+  }
+  applyQuality(tier) {
+    this.qualityTier = tier; this.lowQuality = tier === 0;
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio, [.85, 1.25, 1.7][tier]));
+    const shadows = tier > 0;
+    if (this.renderer.shadowMap.enabled !== shadows) {
+      this.renderer.shadowMap.enabled = shadows;
+      const materials = new Set(); this.scene.traverse(o => { if (o.material) for (const material of Array.isArray(o.material) ? o.material : [o.material]) materials.add(material); });
+      for (const material of materials) material.needsUpdate = true;
+    }
+    for (const entity of this.entities.values()) entity.traverse(o => { if (o.isLOD && o.levels[1]) o.levels[1].distance = [25, 40, 60][tier]; });
+    this.stats.pixelRatio = this.renderer.getPixelRatio();
+  }
+  trackPerformance() {
+    this.frameCount++; const now = performance.now(), duration = now - this.frameWindow;
+    if (duration < 1200) return;
+    this.stats.fps = this.frameCount * 1000 / duration; this.stats.drawCalls = this.renderer.info.render.calls; this.stats.triangles = this.renderer.info.render.triangles;
+    if (this.qualityMode === 'auto' && !document.hidden) {
+      this.slowWindows = this.stats.fps < 38 ? this.slowWindows + 1 : 0;
+      this.fastWindows = this.stats.fps > 57 ? this.fastWindows + 1 : 0;
+      if (this.slowWindows >= 3 && this.qualityTier > 0) { this.applyQuality(this.qualityTier - 1); this.slowWindows = this.fastWindows = 0; }
+      else if (this.fastWindows >= 15 && this.qualityTier < 1) { this.applyQuality(this.qualityTier + 1); this.slowWindows = this.fastWindows = 0; }
+    }
+    this.frameCount = 0; this.frameWindow = now;
   }
 }
 const cached = new Map();

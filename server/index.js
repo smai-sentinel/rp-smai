@@ -1,19 +1,20 @@
 import express from 'express';
 import { createServer } from 'node:http';
-import { timingSafeEqual } from 'node:crypto';
+import { timingSafeEqual, randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { Server } from 'socket.io';
 import { Simulation, TICK_RATE, cleanText } from '../shared/simulation.js';
 import { WORLD } from '../shared/world.js';
+import { createAdminHandlers } from './admin.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const passwordMatches = (provided, required) => {
   const a = Buffer.from(typeof provided === 'string' ? provided.slice(0, 256) : ''); const b = Buffer.from(required);
   return a.length === b.length && timingSafeEqual(a, b);
 };
-export async function createGameServer({ dev = false, password = process.env.ROOM_PASSWORD || '', maxRooms = Number(process.env.MAX_ROOMS) || 20, publicOrigins = (process.env.PUBLIC_ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean) } = {}) {
-  const app = express(); const http = createServer(app); const rooms = new Map();
+export async function createGameServer({ dev = false, password = process.env.ROOM_PASSWORD || '', maxRooms = Number(process.env.MAX_ROOMS) || 20, publicOrigins = (process.env.PUBLIC_ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean), adminToken = process.env.ADMIN_TOKEN || '' } = {}) {
+  const app = express(); const http = createServer(app); const rooms = new Map(), reports = [];
   app.disable('x-powered-by');
   app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff'); res.setHeader('Referrer-Policy', 'same-origin');
@@ -32,8 +33,10 @@ export async function createGameServer({ dev = false, password = process.env.ROO
       try { cb(null, new URL(origin).host === req.headers.host || publicOrigins.includes(origin)); } catch { cb(null, false); }
     },
   });
+  const attachAdmin = createAdminHandlers({ io, adminToken });
   io.on('connection', socket => {
     let room = null, joined = false; const limits = new Map();
+    attachAdmin(socket, () => room);
     const permit = (key, max, seconds = 1) => {
       const now = Date.now(); const bucket = limits.get(key) || { since: now, count: 0 };
       if (now - bucket.since > seconds * 1000) { bucket.since = now; bucket.count = 0; }
@@ -44,6 +47,9 @@ export async function createGameServer({ dev = false, password = process.env.ROO
       const reply = typeof ack === 'function' ? ack : () => {};
       if (joined || !permit('join', 5, 10)) return reply({ error: 'נא להמתין לפני ניסיון נוסף.' });
       if (password && !passwordMatches(data?.password, password)) return reply({ error: 'סיסמת השרת אינה נכונה.' });
+      const { guestToken } = attachAdmin.identify(socket, data?.guestToken);
+      const banError = attachAdmin.checkBan(socket);
+      if (banError) return reply({ error: banError });
       const code = cleanText(data?.room, 20).toUpperCase().replace(/[^A-Z0-9-]/g, '') || 'SMAI';
       if (!rooms.has(code)) {
         if (rooms.size >= maxRooms) return reply({ error: 'השרת מלא כרגע. נסה שוב מאוחר יותר.' });
@@ -53,19 +59,35 @@ export async function createGameServer({ dev = false, password = process.env.ROO
       const player = room.sim.addPlayer(socket.id, data?.name, data?.role);
       if (!player) return reply({ error: 'החדר מלא (16 שחקנים).' });
       socket.data.room = code; socket.data.voice = false; socket.join(code); joined = true; clearTimeout(timer); room.emptySince = null;
-      reply({ id: socket.id, room: code, state: room.sim.snapshot(), iceServers });
+      reply({ id: socket.id, room: code, state: room.sim.snapshot(), iceServers, guestToken });
       io.to(code).emit('chat', { name: 'מערכת', text: `${player.name} נכנס לעיר.`, system: true });
     });
     socket.on('input', data => { if (joined && permit('input', 50)) room.sim.setInput(socket.id, data); });
     socket.on('action', name => {
       if (!joined || !permit('action', 15)) return;
-      const allowed = { interact: 'interact', delivery: 'delivery', siren: 'siren', garage: 'garage', shoot: 'shoot', reload: 'reload' };
+      const allowed = { interact: 'interact', delivery: 'delivery', siren: 'siren', garage: 'garage', shoot: 'shoot', reload: 'reload', cuff: 'cuff', buyBankTools: 'buyBankTools', hostage: 'hostage' };
       if (Object.hasOwn(allowed, name)) room.sim[allowed[name]](socket.id);
     });
     socket.on('chat', data => {
       if (!joined || !permit('chat', 5, 5)) return;
       const text = cleanText(data); if (!text) return;
       io.to(socket.data.room).emit('chat', { id: socket.id, name: room.sim.players.get(socket.id)?.name || 'אורח', text });
+    });
+    socket.on('report', (data, ack) => {
+      const reply = typeof ack === 'function' ? ack : () => {};
+      if (!joined) return reply({ error: 'צריך להצטרף לחדר לפני שליחת דיווח.' });
+      if (!['cheating', 'harassment', 'voice', 'other'].includes(data?.reason)) return reply({ error: 'בחר סיבה תקינה לדיווח.' });
+      const reporter = room.sim.players.get(socket.id), target = room.sim.players.get(data?.targetId);
+      if (!target || target.id === socket.id) return reply({ error: 'אפשר לדווח על שחקן אחר שנמצא איתך בחדר.' });
+      if (!permit('report', 3, 300)) return reply({ error: 'אפשר לשלוח עד 3 דיווחים בחמש דקות. נסה שוב מאוחר יותר.' });
+      const report = {
+        id: `RPT-${randomUUID()}`, createdAt: new Date().toISOString(), room: socket.data.room,
+        reporterId: reporter.id, reporterName: reporter.name, targetId: target.id, targetName: target.name,
+        reason: data.reason, details: cleanText(data.details, 500),
+      };
+      reports.push(report); if (reports.length > 200) reports.shift();
+      console.info(JSON.stringify({ type: 'player-report', ...report }));
+      reply({ ok: true, id: report.id });
     });
     socket.on('voice:ready', enabled => {
       if (!joined || typeof enabled !== 'boolean' || !permit('voice-ready', 6, 10)) return;
@@ -91,14 +113,16 @@ export async function createGameServer({ dev = false, password = process.env.ROO
       if (!room.sim.players.size) continue;
       room.sim.tick(1 / TICK_RATE);
       for (const event of room.sim.events.splice(0)) { if (event.to) io.to(event.to).emit('event', event); else io.to(code).emit('event', event); }
-      if (count % 2 === 0) io.to(code).emit('state', room.sim.snapshot());
+      // A delayed full snapshot is obsolete when the next one is available.
+      // Drop it on backpressure; reliable chat/actions/events keep their order.
+      if (count % 2 === 0) io.to(code).volatile.emit('state', room.sim.snapshot());
     }
     count++;
   }, 1000 / TICK_RATE);
   let vite;
   if (dev) { vite = await (await import('vite')).createServer({ root, server: { middlewareMode: true }, appType: 'spa' }); app.use(vite.middlewares); }
   else { app.use(express.static(resolve(root, 'dist'))); app.get('/{*path}', (_req, res) => res.sendFile(resolve(root, 'dist/index.html'))); }
-  return { app, http, io, rooms, close: async () => { clearInterval(interval); await vite?.close(); await new Promise(resolve => io.close(resolve)); if (http.listening) await new Promise(resolve => http.close(resolve)); } };
+  return { app, http, io, rooms, reports, close: async () => { clearInterval(interval); await vite?.close(); await new Promise(resolve => io.close(resolve)); if (http.listening) await new Promise(resolve => http.close(resolve)); } };
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const server = await createGameServer({ dev: process.argv.includes('--dev') });

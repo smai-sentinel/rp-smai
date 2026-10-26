@@ -66,3 +66,26 @@
   .touch-mode.chatting .chat{top:auto;bottom:12px;left:16px;width:auto;max-width:none}
 }
 @media(max-width:380px){.touch-mode .touch-actions{width:146px;right:12px}.touch-mode .touch-stick{width:116px;height:116px;left:12px}.touch-mode #stick-knob{left:35px;top:35px}.touch-mode .touch-utility{right:12px;gap:4px}.touch-mode .touch-utility button{min-width:44px;padding:5px}.touch-mode .mission-card{width:160px}.touch-mode .vehicle-status{width:120px}.touch-mode .location{display:none}}
+
+/* Session controls remain usable in small landscape windows and with a keyboard. */
+button.mini-brand{pointer-events:auto;background:none;border:0;text-align:left;padding:0;cursor:pointer}
+button.mini-brand:focus-visible{outline:2px solid var(--lime);outline-offset:8px}
+.session-tabs{display:flex;gap:8px;border-bottom:1px solid #ffffff20;margin:24px 0 20px;padding-bottom:10px;flex-wrap:wrap}
+.session-tabs button{background:#213740;border:1px solid #ffffff20;color:#bdccc7;padding:12px 20px;min-height:44px;font-size:13px;border-radius:7px}
+.session-tabs button.active{background:var(--lime);color:#14251f;border-color:var(--lime)}
+.session-panel{max-width:720px;min-height:260px}.session-panel h3{font-size:20px;font-weight:500}.session-panel .muted{font-size:12px;line-height:1.9}
+.menu-setting{display:flex;justify-content:space-between;gap:20px;align-items:center;border-bottom:1px solid #ffffff13;padding:16px 0;font-size:14px}
+.menu-setting select,.report-form select,.report-form input,.report-form textarea{background:#0e222a;color:#e5edde;border:1px solid #647c7866;padding:11px 13px;font:inherit;border-radius:6px;min-width:0;max-width:100%}
+.menu-setting input[type=checkbox]{width:21px;height:21px;accent-color:var(--lime)}
+.menu-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:24px 0}
+.menu-actions button,.voice-person button{padding:13px 16px;min-height:44px;background:#ffffff08;border:1px solid #ffffff25;border-radius:6px;font-size:12px}
+.menu-actions .primary{background:var(--lime);color:#14251f}.danger-button{color:#ffb9a5}
+.voice-list{display:grid;gap:8px}.voice-person{display:flex;align-items:center;justify-content:space-between;gap:15px;background:#0e2029;padding:15px;border-radius:7px}
+.voice-person b{display:block;font-size:14px;overflow-wrap:anywhere}.voice-person small{display:block;color:#9cafaa;font-size:11px;margin-top:6px}.voice-person button{flex-shrink:0;color:var(--lime)}
+.report-form{display:grid;gap:10px;max-width:620px}.report-form label{font-size:13px;margin-top:8px}.report-form textarea{resize:vertical;min-height:100px}.report-form input:focus,.report-form textarea:focus,.report-form select:focus{outline:1px solid var(--lime)}
+.report-status{font-size:12px;min-height:20px;line-height:1.7;color:var(--lime)}.admin-help{direction:ltr;text-align:left;padding:15px;background:#0b1b23;border:1px solid #ffffff1a;border-radius:6px;font:12px/1.9 monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+.cuff-banner{position:absolute;bottom:155px;left:50%;transform:translateX(-50%);background:#162b36ed;border:1px solid #92b8cc80;padding:10px 20px;text-align:center;font-size:13px;color:#d4e9ef;max-width:90vw}
+#equipment-status,#hostage-status{font-size:11px;line-height:1.8;margin-top:10px;padding-top:8px;border-top:1px solid #ffffff1a;color:#d6e8c3}
+#hostage-status{color:#f4c49c}.touch-utility{flex-wrap:wrap;max-width:225px;justify-content:flex-start}
+@media(max-width:760px){.session-tabs{gap:5px}.session-tabs button{padding:10px 12px;flex:1}.menu-setting{font-size:12px;gap:10px}.menu-setting select{max-width:60%;font-size:12px}.voice-person{padding:12px;gap:8px}.voice-person button{font-size:10px;padding:10px}.report-form input,.report-form select,.report-form textarea{font-size:16px}.cuff-banner{bottom:270px;font-size:11px}}
+@media(max-height:520px){.session-panel{min-height:180px}.session-tabs{margin-top:15px}.modal-card{max-height:92dvh}.touch-mode #equipment-status,.touch-mode #hostage-status{font-size:9px;padding-top:3px;margin-top:3px}.touch-mode .cuff-banner{top:110px;bottom:auto;max-width:35vw}.touch-mode .touch-utility{max-width:230px;bottom:130px}}

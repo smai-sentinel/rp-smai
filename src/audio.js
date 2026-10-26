@@ -1,13 +1,25 @@
 export class GameAudio {
   constructor() { this.enabled = true; }
-  async start() {
+  start() {
     if (!this.ctx) {
-      this.ctx = new AudioContext(); this.master = this.ctx.createGain(); this.master.gain.value = .16; this.master.connect(this.ctx.destination);
-      this.engine = this.ctx.createOscillator(); this.engine.type = 'sawtooth'; this.filter = this.ctx.createBiquadFilter(); this.filter.type = 'lowpass'; this.filter.frequency.value = 280;
-      this.gain = this.ctx.createGain(); this.gain.gain.value = 0; this.engine.connect(this.filter).connect(this.gain).connect(this.master); this.engine.start();
-      this.siren = this.ctx.createOscillator(); this.sirenGain = this.ctx.createGain(); this.sirenGain.gain.value = 0; this.siren.connect(this.sirenGain).connect(this.master); this.siren.start();
+      const AudioContextType = globalThis.AudioContext || globalThis.webkitAudioContext;
+      if (!AudioContextType) return false;
+      try {
+        this.ctx = new AudioContextType(); this.master = this.ctx.createGain(); this.master.gain.value = .16; this.master.connect(this.ctx.destination);
+        this.engine = this.ctx.createOscillator(); this.engine.type = 'sawtooth'; this.filter = this.ctx.createBiquadFilter(); this.filter.type = 'lowpass'; this.filter.frequency.value = 280;
+        this.gain = this.ctx.createGain(); this.gain.gain.value = 0; this.engine.connect(this.filter).connect(this.gain).connect(this.master); this.engine.start();
+        this.siren = this.ctx.createOscillator(); this.sirenGain = this.ctx.createGain(); this.sirenGain.gain.value = 0; this.siren.connect(this.sirenGain).connect(this.master); this.siren.start();
+      } catch {
+        try { Promise.resolve(this.ctx?.close()).catch(() => {}); } catch {}
+        this.ctx = null; return false;
+      }
     }
-    await this.ctx.resume();
+    // Some browsers leave resume() pending until another user gesture. Sound
+    // must never hold up joining a room or starting the solo simulation.
+    if (this.ctx.state !== 'running') {
+      try { Promise.resolve(this.ctx.resume()).catch(() => {}); } catch {}
+    }
+    return true;
   }
   update(player, state) {
     if (!this.ctx) return;
